@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Uploader — Pusat Konten</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style id="bc"></style>
+<style>
+.no-sb::-webkit-scrollbar{display:none}
+.no-sb{-ms-overflow-style:none;scrollbar-width:none}
+</style>
+</head>
+<body class="min-h-screen">
+<script>document.getElementById("bc").textContent = BASE_CSS;</script>
+
+<div id="gate" class="hero min-h-screen flex items-center justify-center p-5" style="border-radius:0">
+ <form onsubmit="login(event)" class="bg-white text-slate-800 rounded-3xl shadow-2xl p-8 w-full max-w-sm space-y-4 text-center pop">
+  <div id="gateLogo" class="flex justify-center"></div>
+  <p class="eyebrow brass justify-center">Panel Uploader</p>
+  <input id="pinInput" type="password" required placeholder="PIN admin" class="inp text-center !rounded-full">
+  <p id="gateErr" class="text-xs font-bold hidden" style="color:#9B2C2C"></p>
+  <button id="gateBtn" class="btn w-full !py-3">Masuk</button>
+ </form>
+</div>
+
+<div id="app" class="hidden">
+<nav class="nav sticky top-0 z-40">
+ <div class="max-w-6xl mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+  <div id="hubLogo" class="shrink-0"></div>
+  <div id="mainTabs" class="no-sb flex items-center gap-7 overflow-x-auto md:overflow-visible order-last w-full md:order-none md:w-auto py-2"></div>
+  <button onclick="logout()" class="btn">Keluar</button>
+ </div>
+</nav>
+<header class="hero"><div class="max-w-6xl mx-auto px-5 pt-10 pb-16 grid lg:grid-cols-2 gap-8 items-center">
+ <div class="rise"><div class="eyebrow">Panel Uploader</div>
+  <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mt-3">Kelola Konten <span class="gtext">Semua Brand</span></h1>
+  <p class="mt-3 text-slate-200 text-sm max-w-md">Unggah gambar dan video ke folder Drive yang tepat, atau tautkan link file Drive lama agar tercatat otomatis di Google Sheet.</p></div>
+ <div class="glass p-5 grid grid-cols-3 gap-3 rise" style="--i:2">
+  <div class="rounded-xl p-3" style="background:rgba(255,255,255,.1)"><p class="text-[11px] text-slate-300">Total</p><p id="stTotal" class="text-2xl font-extrabold gtext">0</p></div>
+  <div class="rounded-xl p-3" style="background:rgba(255,255,255,.1)"><p class="text-[11px] text-slate-300">Video</p><p id="stVideo" class="text-2xl font-extrabold gtext">0</p></div>
+  <div class="rounded-xl p-3" style="background:rgba(255,255,255,.1)"><p class="text-[11px] text-slate-300">Brand</p><p class="text-2xl font-extrabold gtext">4</p></div>
+ </div></div></header>
+
+<main class="max-w-6xl mx-auto px-5 mt-10">
+ <section id="secUp" class="card p-5 sm:p-8 space-y-6 pop">
+  <div><p class="lbl">Langkah 1 — Brand tujuan</p><div id="brandPick" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div></div>
+  <form id="form" onsubmit="submitUpload(event)" class="space-y-5 hidden pop">
+   <div class="rule"></div>
+   <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm">Tambah ke <b id="chosen" class="rtext text-xl font-extrabold"></b></p>
+    <span class="chip">Draf tersimpan otomatis</span>
+   </div>
+   <div class="grid sm:grid-cols-2 gap-5">
+    <div><label class="lbl">Nama PIC</label><input id="fPic" class="inp" placeholder="Nama pengunggah"></div>
+    <div><label class="lbl">Kategori *</label><select id="fCat" required class="inp"></select></div>
+   </div>
+   <div><label class="lbl">Judul konten *</label><input id="fJudul" required class="inp" placeholder="Contoh: Promo Early Bird"></div>
+   <div><label class="lbl">Caption / catatan</label><textarea id="fCap" rows="3" class="inp" placeholder="Caption atau instruksi untuk user"></textarea></div>
+
+   <!-- PILIHAN METODE: UPLOAD FILE ATAU LINK DRIVE -->
+   <div class="space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+     <label class="lbl !mb-0">Sumber File Konten *</label>
+     <div class="flex gap-2">
+      <button type="button" id="mBtnFile" onclick="setMode('file')" class="chip on"></button>
+      <button type="button" id="mBtnLink" onclick="setMode('link')" class="chip"></button>
+     </div>
+    </div>
+
+    <!-- MODE 1: UPLOAD FILE BARU -->
+    <div id="boxModeFile">
+     <p class="text-xs muted mb-2">Gambar, video, PDF, zip (maks <span id="maxMb"></span> MB)</p>
+     <label id="drop" class="drop block p-6 text-center">
+      <input type="file" id="fFile" accept="image/*,video/*,.pdf,.zip" class="hidden">
+      <span class="brass flex justify-center" id="dropIco"></span>
+      <span class="block text-sm font-bold mt-2">Seret file ke sini atau klik untuk memilih</span>
+      <span class="block text-xs muted mt-1">Video didukung — diunggah per potongan dengan persen progres</span>
+     </label>
+     <div id="fileBox" class="hidden mt-3 p-3 card flex items-center gap-3 pop">
+      <div id="thumbWrap" class="w-12 h-12 rounded-lg ph flex items-center justify-center overflow-hidden shrink-0"></div>
+      <p id="fname" class="text-xs font-bold truncate flex-1"></p>
+      <button type="button" onclick="clearFile()" class="text-xs font-bold brass">Ganti</button>
+     </div>
+    </div>
+
+    <!-- MODE 2: INPUT LINK GOOGLE DRIVE -->
+    <div id="boxModeLink" class="hidden space-y-2 pop">
+     <input id="fLink" class="inp" placeholder="Tempel link file Google Drive (contoh: https://drive.google.com/file/d/.../view)">
+     <p class="text-[11px] muted">Pastikan akses file di Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link" (Anyone with the link)</b>.</p>
+     <p id="linkErr" class="text-xs font-bold hidden" style="color:#9B2C2C"></p>
+     <div id="linkBox" class="hidden mt-2 p-3 card flex items-center gap-3 pop">
+      <div id="linkThumb" class="w-12 h-12 rounded-lg ph flex items-center justify-center overflow-hidden shrink-0"></div>
+      <div class="min-w-0 flex-1">
+       <p class="text-xs font-bold truncate">File Google Drive Terdeteksi</p>
+       <p id="linkIdTxt" class="text-[11px] muted truncate"></p>
+      </div>
+      <a id="linkTest" href="#" target="_blank" class="btn btn2 !py-1.5 !px-3 !text-xs">Cek File</a>
+     </div>
+    </div>
+   </div>
+
+   <div class="flex flex-col sm:flex-row justify-between gap-3">
+    <button type="button" onclick="clearDraft()" class="btn btn2" id="btnClr"></button>
+    <button id="btnUp" class="btn !px-8 !py-3.5"></button>
+   </div>
+  </form>
+ </section>
+
+ <section id="secList" class="hidden space-y-4">
+  <div class="card p-3 flex flex-wrap gap-2 items-center">
+   <div id="brandFilter" class="no-sb flex gap-1.5 overflow-x-auto"></div>
+   <select id="catFilter" onchange="renderList()" class="inp !w-auto !rounded-full text-xs"></select>
+   <button onclick="loadData()" class="btn btn2 ml-auto" id="btnRef"></button>
+  </div>
+  <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+ </section>
+
+ <section id="secLinks" class="hidden card p-5 sm:p-8 pop">
+  <div class="eyebrow brass">Bagikan</div><h2 class="text-2xl font-extrabold mt-2">Link <span class="rtext">Langsung</span> per Brand</h2>
+  <p class="muted text-xs mt-1 mb-5">Link membuka halaman kategori brand terkait. Salin lalu kirim ke tim.</p>
+  <div id="linkRows"></div>
+ </section>
+</main>
+<footer class="foot mt-16"><div class="max-w-6xl mx-auto px-5 py-6 text-xs flex flex-wrap justify-between gap-2"><span>Panel Uploader — Pusat Konten</span><span>© 2026 EXATA Group</span></div></footer>
+</div>
+
+<div id="editM" class="fixed inset-0 z-50 hidden flex items-center justify-center p-5" style="background:rgba(27,36,48,.8)">
+ <form onsubmit="submitEdit(event)" class="w-full max-w-md p-6 space-y-4 rounded-2xl pop" style="background:var(--ivory)">
+  <div class="flex justify-between items-center"><h3 class="serif text-2xl">Edit konten</h3><button type="button" id="btnEx" onclick="editM.classList.add('hidden')"></button></div>
+  <input type="hidden" id="eId">
+  <div><label class="lbl">Brand</label><select id="eBrand" class="inp"></select></div>
+  <div><label class="lbl">Kategori</label><select id="eCat" class="inp"></select></div>
+  <div><label class="lbl">Judul</label><input id="eJudul" required class="inp"></div>
+  <div><label class="lbl">Caption</label><textarea id="eCap" rows="3" class="inp"></textarea></div>
+  <button id="eBtn" class="btn w-full">Simpan perubahan</button>
+</form></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const L = (n, t) => `${ico(n, "w-4 h-4")}<span>${t}</span>`;
+const SCRIPT_URL = CONFIG.SCRIPT_URL, CHUNK = 5242880; // 20 x 256 KB
+let PIN = sessionStorage.getItem("HUB_PIN") || "", brand = "", file = null, upMode = "file", all = [], fBrand = "Semua", db;
+const mb = n => (n / 1048576).toFixed(1) + " MB";
+
+const opt = (arr, first) => (first ? `<option value="Semua">${first}</option>` : "") + arr.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+$("fCat").innerHTML = opt(CATS.map(c => c.name)); $("eCat").innerHTML = opt(CATS.map(c => c.name));
+$("eBrand").innerHTML = opt(BRANDS.map(b => b.name)); $("catFilter").innerHTML = opt(CATS.map(c => c.name), "Semua kategori");
+$("maxMb").textContent = CONFIG.MAX_MB; $("gateLogo").innerHTML = hubMark(); $("hubLogo").innerHTML = hubMark(); $("dropIco").innerHTML = ico("upload", "w-9 h-9");
+$("mBtnFile").innerHTML = L("upload", "Upload File"); $("mBtnLink").innerHTML = L("link", "Input Link Drive");
+$("btnClr").innerHTML = L("trash", "Bersihkan draf"); $("btnUp").innerHTML = L("upload", "Upload ke Drive & Sheet");
+$("btnRef").innerHTML = L("refresh", "Segarkan"); $("btnEx").innerHTML = ico("close", "w-5 h-5");
+$("mainTabs").innerHTML = [["up","upload","Upload"],["list","folder","Konten"],["links","link","Link bagikan"]].map(t => `<button data-t="${t[0]}" class="nl flex items-center gap-1.5 whitespace-nowrap">${ico(t[1], "w-4 h-4")}${t[2]}${t[0] === "list" ? ' <span id="badge" class="opacity-60">0</span>' : ""}</button>`).join("");
+$("mainTabs").addEventListener("click", e => { const t = e.target.closest("[data-t]"); if (t) tab(t.dataset.t); });
+
+async function api(payload) {
+  const r = await fetch(SCRIPT_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({...payload, pin: PIN})});
+  const j = await r.json(); if (j.status !== "success") throw new Error(j.message || "Gagal"); return j;
+}
+async function login(e) {
+  e.preventDefault(); PIN = $("pinInput").value; $("gateBtn").textContent = "Memeriksa…"; $("gateErr").classList.add("hidden");
+  try { await api({action:"verify"}); sessionStorage.setItem("HUB_PIN", PIN); start(); }
+  catch (err) { $("gateErr").textContent = err.message; $("gateErr").classList.remove("hidden"); }
+  $("gateBtn").textContent = "Masuk";
+}
+function logout() { sessionStorage.removeItem("HUB_PIN"); location.reload(); }
+async function start() {
+  $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
+  renderBrandPick(); renderBrandFilter(); renderLinks(); tab("up"); await openDB(); await restoreDraft(); loadData();
+}
+function tab(t) {
+  [["up","secUp"],["list","secList"],["links","secLinks"]].forEach(([k, s]) => { const el = $(s); el.classList.toggle("hidden", k !== t); if (k === t) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); } });
+  document.querySelectorAll("#mainTabs [data-t]").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+}
+/* BRAND & MODE SUMBER FILE */
+function setBrand(b) { brand = b; $("form").classList.toggle("hidden", !b); $("chosen").textContent = b || ""; renderBrandPick(); saveDraft(); }
+function renderBrandPick() {
+  $("brandPick").innerHTML = BRANDS.map(b => { const on = b.name === brand; return `<button type="button" data-b="${esc(b.name)}" class="card lift p-4 flex items-center justify-center h-20" style="${on ? "border-color:var(--brass);box-shadow:0 0 0 3px rgba(230,25,95,.18)" : ""}">
+   <img src="${esc(CONFIG.LOGOS[b.name])}" alt="${esc(b.name)}" class="max-h-12 max-w-full w-auto h-auto object-contain object-center"></button>`; }).join("");
+}
+$("brandPick").addEventListener("click", e => { const b = e.target.closest("[data-b]"); if (b) setBrand(b.dataset.b); });
+
+function setMode(m) {
+  upMode = m === "link" ? "link" : "file";
+  $("mBtnFile").classList.toggle("on", upMode === "file");
+  $("mBtnLink").classList.toggle("on", upMode === "link");
+  $("boxModeFile").classList.toggle("hidden", upMode !== "file");
+  $("boxModeLink").classList.toggle("hidden", upMode !== "link");
+  $("btnUp").innerHTML = upMode === "link" ? L("link", "Simpan Link ke Sheet") : L("upload", "Upload ke Drive & Sheet");
+  saveDraft();
+}
+
+function extractDriveId(raw) {
+  const s = String(raw || "").trim();
+  if (!s || /\/folders\//i.test(s)) return "";
+  const m = s.match(/\/file\/d\/([a-zA-Z0-9_-]{10,})/) || s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/) || s.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  if (m) return m[1];
+  return /^[a-zA-Z0-9_-]{20,}$/.test(s) ? s : "";
+}
+
+function updateLinkPreview() {
+  const raw = $("fLink").value.trim(), isFolder = /\/folders\//i.test(raw), id = extractDriveId(raw);
+  $("linkErr").classList.toggle("hidden", !raw || !!id);
+  if (raw && !id) $("linkErr").textContent = isFolder ? "Link yang dimasukkan adalah link Folder. Gunakan link File Drive." : "Format link Google Drive belum dikenali.";
+  $("linkBox").classList.toggle("hidden", !id);
+  if (id) {
+    $("linkIdTxt").textContent = "ID: " + id;
+    $("linkTest").href = `https://drive.google.com/file/d/${encodeURIComponent(id)}/view`;
+    $("linkThumb").innerHTML = `<img src="https://drive.google.com/thumbnail?id=${esc(id)}&sz=w200" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML=ico('link','w-5 h-5')">`;
+  }
+}
+$("fLink").addEventListener("input", () => { updateLinkPreview(); saveDraft(); });
+
+/* DRAF — file & link disimpan otomatis */
+const openDB = () => new Promise(res => { const q = indexedDB.open("HubDraft2", 1); q.onupgradeneeded = e => e.target.result.createObjectStore("d", {keyPath:"id"}); q.onsuccess = e => { db = e.target.result; res(); }; q.onerror = () => res(); });
+function saveDraft() { if (!db) return; try { db.transaction("d","readwrite").objectStore("d").put({id:"x", brand, upMode, pic:$("fPic").value, cat:$("fCat").value, judul:$("fJudul").value, cap:$("fCap").value, link:$("fLink").value, file}); } catch (e) {} }
+const restoreDraft = () => new Promise(res => { if (!db) return res(); const q = db.transaction("d").objectStore("d").get("x");
+  q.onsuccess = () => { const d = q.result; if (d) { $("fPic").value = d.pic || ""; $("fCat").value = d.cat || CATS[0].name; $("fJudul").value = d.judul || ""; $("fCap").value = d.cap || ""; $("fLink").value = d.link || ""; updateLinkPreview(); if (d.file) { file = d.file; showFile(); } if (d.upMode) setMode(d.upMode); if (d.brand) setBrand(d.brand); } res(); }; q.onerror = () => res(); });
+["fPic","fCat","fJudul","fCap"].forEach(id => $(id).addEventListener("input", saveDraft));
+
+function setFile(f) {
+  if (!f) return;
+  if (f.size > CONFIG.MAX_MB * 1048576) return alert("File melebihi " + CONFIG.MAX_MB + " MB.");
+  file = f; showFile(); saveDraft();
+}
+$("fFile").addEventListener("change", e => setFile(e.target.files[0]));
+const drop = $("drop");
+["dragenter","dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
+function showFile() {
+  $("fileBox").classList.remove("hidden"); $("fname").textContent = `${file.name} (${mb(file.size)})`;
+  $("thumbWrap").innerHTML = file.type.startsWith("image/") ? `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">` : ico(file.type.startsWith("video/") ? "play" : "folder", "w-6 h-6");
+}
+function clearFile() { file = null; $("fFile").value = ""; $("fileBox").classList.add("hidden"); saveDraft(); }
+function clearDraft() { $("form").reset(); file = null; $("fileBox").classList.add("hidden"); $("linkBox").classList.add("hidden"); $("linkErr").classList.add("hidden"); if (db) db.transaction("d","readwrite").objectStore("d").delete("x"); }
+
+/* UPLOAD BERPOTONG ATAU SIMPAN BY LINK DRIVE */
+const toB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
+async function retry(fn, n = 3) { for (let i = 1; ; i++) { try { return await fn(); } catch (e) { if (i >= n) throw e; await new Promise(r => setTimeout(r, 1500 * i)); } } }
+async function submitUpload(e) {
+  e.preventDefault();
+  if (!brand) return alert("Pilih brand terlebih dahulu.");
+  const b = $("btnUp"), kategori = $("fCat").value;
+
+  if (upMode === "link") {
+    const fileId = extractDriveId($("fLink").value);
+    if (!fileId) return alert("Masukkan link file Google Drive yang valid terlebih dahulu (bukan link folder).");
+    b.disabled = true;
+    const t = Prog.start("Menautkan Link Drive", $("fJudul").value || fileId);
+    try {
+      t.set(35, "Mencatat file Drive ke Sheet…");
+      await retry(() => api({action:"register", fileId, brand, kategori, pic:$("fPic").value, judul:$("fJudul").value, caption:$("fCap").value}));
+      t.set(100); setTimeout(() => t.done("Tersimpan di Sheet"), 300);
+      clearDraft(); await loadData(true); fBrand = brand; renderBrandFilter(); renderList(); tab("list");
+    } catch (err) {
+      t.fail("Gagal");
+      alert("Gagal menyimpan link: " + err.message + "\nPastikan file Drive sudah diatur ke 'Siapa saja yang memiliki link'.");
+    }
+    b.disabled = false;
+    return;
+  }
+
+  if (!file) return alert("Pilih file konten terlebih dahulu.");
+  b.disabled = true;
+  const mime = file.type || "application/octet-stream", t = Prog.start("Mengunggah", file.name);
+  window.onbeforeunload = () => "Upload sedang berjalan";
+  try {
+    t.set(3, "Menyiapkan folder di Drive…");
+    const init = await api({action:"init", brand, kategori, fileName:file.name, mimeType:mime, size:file.size});
+    let start = 0, fileId = null;
+    while (start < file.size) {
+      const end = Math.min(start + CHUNK, file.size), b64 = await toB64(file.slice(start, end));
+      const r = await retry(() => api({action:"chunk", session:init.session, start, total:file.size, mimeType:mime, b64}));
+      start = end; if (r.done) fileId = r.fileId;
+      t.set(5 + start / file.size * 90, `${mb(start)} / ${mb(file.size)} — jangan tutup halaman`);
+    }
+    if (!fileId) throw new Error("Upload tidak selesai, coba ulangi.");
+    t.set(97, "Mencatat ke Sheet…");
+    await retry(() => api({action:"register", fileId, brand, kategori, pic:$("fPic").value, judul:$("fJudul").value, caption:$("fCap").value}));
+    t.set(100); setTimeout(() => t.done("Tersimpan di Drive & Sheet"), 300);
+    clearDraft(); await loadData(true); fBrand = brand; renderBrandFilter(); renderList(); tab("list");
+  } catch (err) { t.fail("Gagal"); alert("Gagal upload: " + err.message + "\nDraf Anda masih tersimpan, silakan coba lagi."); }
+  window.onbeforeunload = null; b.disabled = false;
+}
+
+/* DAFTAR KONTEN */
+async function loadData(quiet) {
+  const t = quiet ? null : Prog.start("Memuat konten", "Menghubungi server…"); t && t.set(12);
+  try { const r = await fetch(SCRIPT_URL); t && t.set(50, "Menerima data…"); const j = await r.json(); if (j.status === "success") all = j.data; t && t.set(100); t && setTimeout(() => t.done("Konten siap"), 250); }
+  catch (e) { t && t.fail("Gagal memuat"); }
+  renderList();
+}
+function renderBrandFilter() { $("brandFilter").innerHTML = ["Semua", ...BRANDS.map(b => b.name)].map(b => `<button data-f="${esc(b)}" class="chip ${b === fBrand ? "on" : ""}">${esc(b)}</button>`).join(""); }
+$("brandFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) { fBrand = b.dataset.f; renderBrandFilter(); renderList(); } });
+function renderList() {
+  countUp($("badge"), all.length, 500); countUp($("stTotal"), all.length); countUp($("stVideo"), all.filter(x => (x.mimeType || "").startsWith("video/")).length); const c = $("catFilter").value;
+  const l = all.filter(x => (fBrand === "Semua" || x.brand === fBrand) && (c === "Semua" || x.kategori === c));
+  $("grid").innerHTML = l.length ? l.map((i, k) => { const v = (i.mimeType || "").startsWith("video/"); return `
+   <div class="card overflow-hidden flex flex-col lift rise" style="--i:${Math.min(k, 8)}" data-card="${esc(i.id)}">
+    <a href="${esc(i.viewUrl)}" target="_blank" class="relative aspect-[4/3] ph flex items-center justify-center block overflow-hidden">
+     <div class="sk absolute inset-0"></div>
+     <img src="${esc(i.viewUrl)}" loading="lazy" class="fadein absolute inset-0 w-full h-full object-cover" onload="this.classList.add('ld')" onerror="this.previousElementSibling.remove();this.remove()">
+     ${v ? `<span class="absolute inset-0 flex items-center justify-center" style="color:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.55))">${ico("play", "w-12 h-12")}</span>` : ""}
+     <span class="absolute top-3 left-3 chip !py-1 text-[10px]" style="background:var(--ivory)">${esc(i.brand)}</span>
+     <span class="absolute top-3 right-3 chip !py-1 text-[10px]" style="background:var(--ivory)">${esc(i.kategori)}</span></a>
+    <div class="p-4 flex-1"><p class="text-[11px] muted">${esc(i.tanggal)}${i.pic ? " · " + esc(i.pic) : ""}</p>
+     <h3 class="font-bold text-sm mt-1 line-clamp-2">${esc(i.judul)}</h3><p class="text-xs muted mt-1 line-clamp-2">${esc(i.caption)}</p></div>
+    <div class="px-4 pb-4 flex gap-2">
+     <button data-edit="${esc(i.id)}" class="btn btn2 flex-1">${L("edit", "Edit")}</button>
+     <button data-del="${esc(i.id)}" class="btn btn2 flex-1">${L("trash", "Hapus")}</button></div></div>`; }).join("")
+   : `<div class="col-span-full card p-10 text-center pop"><p class="font-extrabold text-xl">Belum ada konten</p></div>`;
+}
+$("grid").addEventListener("click", e => { const ed = e.target.closest("[data-edit]"), de = e.target.closest("[data-del]"); if (ed) openEdit(ed.dataset.edit); if (de) delItem(de.dataset.del); });
+function openEdit(id) {
+  const i = all.find(x => String(x.id) === String(id)); if (!i) return;
+  $("eId").value = i.id; $("eBrand").value = i.brand; $("eCat").value = i.kategori; $("eJudul").value = i.judul; $("eCap").value = i.caption || ""; $("editM").classList.remove("hidden");
+}
+async function submitEdit(e) {
+  e.preventDefault(); const b = $("eBtn"); b.disabled = true; const t = Prog.start("Menyimpan perubahan", "Memperbarui Sheet & Drive…"); t.indet();
+  try { await api({action:"edit", id:$("eId").value, brand:$("eBrand").value, kategori:$("eCat").value, judul:$("eJudul").value, caption:$("eCap").value}); $("editM").classList.add("hidden"); t.done("Perubahan tersimpan"); await loadData(true); }
+  catch (err) { t.fail(err.message); }
+  b.disabled = false;
+}
+async function delItem(id) {
+  if (!confirm("Hapus konten ini? File di Drive juga dipindahkan ke sampah.")) return;
+  const t = Prog.start("Menghapus konten", "Membersihkan Drive & Sheet…"); t.indet();
+  const card = document.querySelector(`[data-card="${CSS.escape(String(id))}"]`); if (card) card.style.cssText += ";opacity:.4;transform:scale(.97);transition:.3s";
+  try { await api({action:"delete", id}); t.done("Konten dihapus"); await loadData(true); } catch (err) { t.fail(err.message); if (card) card.style.cssText += ";opacity:1;transform:none"; }
+}
+/* LINK BAGIKAN */
+const userBase = () => (CONFIG.USER_PAGE_URL || new URL("user.html", location.href).href).split("#")[0];
+function renderLinks() {
+  const mk = (b, c) => `${userBase()}#${b.slug}${c ? "/" + c.slug : ""}`, by = s => CATS.find(c => c.slug === s);
+  const items = [[null, "Semua", "all"], [by("story"), "Story", "story"], [by("blast"), "Materi Blast", "blast"], [by("video"), "Video", "video"]];
+  $("linkRows").innerHTML = BRANDS.map((b, k) => `<div class="py-4 flex flex-wrap items-center gap-3 rise" style="--i:${k};border-top:1px solid var(--line)">
+   <span class="brass">${brandMark(b, "h-8")}</span><b class="font-extrabold text-lg w-28">${esc(b.name)}</b>
+   <div class="flex flex-wrap gap-2">${items.map(([c, t, ic]) => `<button data-copy="${esc(mk(b, c))}" class="btn btn2">${L(ic, t)}</button>`).join("")}</div></div>`).join("");
+}
+$("linkRows").addEventListener("click", async e => {
+  const t = e.target.closest("[data-copy]"); if (!t) return; const old = t.innerHTML;
+  try { await navigator.clipboard.writeText(t.dataset.copy); t.innerHTML = L("check", "Tersalin"); } catch (x) { prompt("Salin link:", t.dataset.copy); }
+  setTimeout(() => t.innerHTML = old, 1500);
+});
+if (PIN) api({action:"verify"}).then(start).catch(() => sessionStorage.removeItem("HUB_PIN"));
+</script></body></html>
