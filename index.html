@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pusat Konten</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style id="bc"></style>
+<style>
+#stage{touch-action:none;overflow:hidden;height:56vh;cursor:grab;position:relative}
+#zImg{transform-origin:center;user-select:none;-webkit-user-drag:none;max-width:100%;max-height:100%;object-fit:contain}
+.no-sb::-webkit-scrollbar{display:none}
+.no-sb{-ms-overflow-style:none;scrollbar-width:none}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+<script>document.getElementById("bc").textContent = BASE_CSS;</script>
+
+<nav class="nav sticky top-0 z-40">
+ <div class="max-w-6xl mx-auto px-5 h-[72px] flex items-center justify-between gap-4">
+  <button onclick="location.hash=''" id="hubBtn" class="shrink-0"></button>
+  <div id="navLinks" class="no-sb flex items-center gap-5 md:gap-8 overflow-x-auto md:overflow-visible py-2"></div>
+  <button id="navCta" onclick="navAction()" class="btn shrink-0"></button>
+ </div>
+</nav>
+
+<header id="hero" class="hero"><div id="heroInner" class="max-w-6xl mx-auto px-5"></div></header>
+
+<!-- ===== HALAMAN IJFF 2026 (IFRAME) ===== -->
+<div id="ijffBody" class="hidden flex-1 w-full">
+ <iframe id="ijffFrame" class="w-full border-0" style="height:calc(100vh - 72px)" allow="autoplay; fullscreen; clipboard-write"></iframe>
+</div>
+
+<main id="mainContent" class="max-w-6xl w-full mx-auto px-5 mt-12 space-y-14 flex-1">
+ <!-- ===== HOME ===== -->
+ <div id="homeBody" class="space-y-14">
+  <section id="brands">
+   <div class="rise"><div class="eyebrow brass">Pilih Brand</div>
+    <h2 class="text-3xl font-extrabold mt-3">Konten Resmi untuk <span class="rtext">Setiap Brand</span></h2>
+    <p class="muted text-sm mt-2 max-w-xl">Pilih brand, lalu telusuri kategori story, feed, carousel, materi blast, dan video.</p></div>
+   <div id="brandGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6"></div>
+   <p id="msg" class="muted text-sm mt-4 hidden"></p>
+  </section>
+  <section id="steps">
+   <div class="eyebrow brass">Cara Pakai</div>
+   <h2 class="text-3xl font-extrabold mt-3">Dari Pilihan ke <span class="rtext">Unduhan</span></h2>
+   <div id="stepGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6"></div>
+  </section>
+ </div>
+
+ <!-- ===== BRAND ===== -->
+ <div id="brandBody" class="hidden space-y-5">
+  <div id="tabs" class="no-sb flex gap-2 overflow-x-auto pb-1 rise"></div>
+  <div class="flex gap-2 rise" style="--i:1">
+   <div class="relative flex-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 muted" id="icoSearch"></span>
+    <input id="q" oninput="renderGrid()" placeholder="Cari judul atau caption…" class="inp !pl-11 !rounded-full"></div>
+   <select id="sort" onchange="renderGrid()" class="inp !w-auto !rounded-full"><option value="new">Terbaru</option><option value="old">Terlama</option><option value="az">A–Z</option></select>
+  </div>
+  <p id="resInfo" class="text-xs muted"></p>
+  <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  <section class="cta px-6 sm:px-10 py-7 mt-10 flex flex-wrap items-center justify-between gap-4">
+   <div class="relative z-10"><h3 class="text-xl sm:text-2xl font-extrabold">Bagikan halaman ini ke tim Anda</h3><p class="text-sm text-pink-100 mt-1">Link langsung membuka brand dan kategori yang sedang Anda lihat.</p></div>
+   <button onclick="copyLink()" class="btn btn2 js-copylink relative z-10"></button>
+  </section>
+ </div>
+</main>
+
+<footer id="foot" class="foot mt-16">
+ <div class="max-w-6xl mx-auto px-5 py-8 flex flex-wrap items-center justify-between gap-4">
+  <div class="flex items-center gap-4"><span id="footLogo" class="bg-white rounded-xl px-3 py-2"></span><p class="text-xs">Pusat Konten<br>Materi promosi resmi semua brand.</p></div>
+  <p class="text-xs">© 2026 EXATA Group. All rights reserved.</p>
+ </div>
+</footer>
+
+<div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(7,18,42,.88)">
+ <div class="w-full max-w-2xl rounded-3xl overflow-hidden pop" style="background:var(--ivory)">
+  <div class="px-5 py-3 flex items-center justify-between text-white" style="background:linear-gradient(100deg,#07142F,#14204F 60%,#3B1466)">
+   <div class="truncate pr-3"><span id="mCat" class="text-[10px] font-bold uppercase tracking-widest" style="color:#FF8FB5"></span>
+    <h3 id="mTitle" class="font-extrabold text-lg truncate"></h3></div>
+   <button onclick="closeModal()" id="btnX" class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition hover:rotate-90" style="border:1px solid rgba(255,255,255,.45)"></button>
+  </div>
+  <div class="p-4 space-y-3 max-h-[85vh] overflow-y-auto">
+   <div class="relative">
+    <div id="stage" class="rounded-2xl ph flex items-center justify-center"></div>
+    <button onclick="nav(-1)" id="btnPrev" class="btn !px-2.5 !py-2.5 absolute left-2 top-1/2 -translate-y-1/2"></button>
+    <button onclick="nav(1)" id="btnNext" class="btn !px-2.5 !py-2.5 absolute right-2 top-1/2 -translate-y-1/2"></button>
+   </div>
+   <div id="zoomBar" class="flex items-center justify-center gap-2">
+    <button onclick="zoomBy(1/1.3)" id="zm" class="btn btn2 !px-3"></button>
+    <span id="zLabel" class="w-14 text-center text-xs font-bold">100%</span>
+    <button onclick="zoomBy(1.3)" id="zp" class="btn btn2 !px-3"></button>
+    <button onclick="resetZoom()" class="btn btn2">Reset</button>
+   </div>
+   <p id="zHint" class="text-[11px] muted text-center">Scroll / cubit 2 jari untuk zoom · geser · klik 2× zoom cepat · ← → pindah materi</p>
+   <p id="mCap" class="text-sm whitespace-pre-line card p-3"></p>
+   <div class="flex gap-2">
+    <button onclick="copyCaption()" id="btnCopy" class="btn btn2 flex-1"></button>
+    <button onclick="dlCurrent()" id="mDl" class="btn flex-1"></button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const L = (n, t) => `${ico(n, "w-4 h-4")}<span>${t}</span>`;
+const IJFF_URL = "https://marketingexata.github.io/IJFF2026/user.html";
+
+$("hubBtn").innerHTML = hubMark(); $("footLogo").innerHTML = hubMark(); $("icoSearch").innerHTML = ico("search", "w-4 h-4");
+$("btnX").innerHTML = ico("close", "w-4 h-4"); $("zm").innerHTML = ico("minus", "w-4 h-4"); $("zp").innerHTML = ico("plus", "w-4 h-4");
+$("btnPrev").innerHTML = ico("back", "w-4 h-4"); $("btnNext").innerHTML = ico("next", "w-4 h-4");
+$("btnCopy").innerHTML = L("copy", "Salin caption"); $("mDl").innerHTML = L("download", "Download");
+document.querySelectorAll(".js-copylink").forEach(b => b.innerHTML = L("link", "Salin link"));
+$("stepGrid").innerHTML = [["all","Pilih Brand","Mulai dari brand yang Anda butuhkan.","t0"],["search","Telusuri","Filter kategori, cari judul, atau urutkan.","t1"],["feed","Preview & Zoom","Lihat detail materi, zoom in dan zoom out.","t2"],["download","Download","Unduh gambar atau video dengan progres.","t3"]]
+ .map((s, k) => `<div class="step p-5 rise" style="--i:${k};background:linear-gradient(135deg,#fff,${["#FDEFF4","#F4EEFC","#FFF5E8","#FDEEEE"][k]})"><span class="tile ${s[3]}">${ico(s[0], "w-6 h-6")}</span><p class="font-extrabold mt-3">${k + 1}. ${s[1]}</p><p class="text-xs muted mt-1">${s[2]}</p></div>`).join("");
+
+let all = [], B = null, C = null, isIjff = false, cur = null, ready = false;
+const isVideo = i => (i.mimeType || "").startsWith("video/");
+const isImg = i => (i.mimeType || "").startsWith("image/") || !i.mimeType;
+const mb = n => (n / 1048576).toFixed(1) + " MB";
+const cnt = (f) => all.filter(f).length;
+
+/* ===== LOADING DATA (persen per tahap) ===== */
+async function load() {
+  route();
+  const t = Prog.start("Memuat konten", "Menghubungi server…"); t.set(12);
+  try {
+    const r = await fetch(CONFIG.SCRIPT_URL); t.set(50, "Menerima data…");
+    const j = await r.json(); if (j.status !== "success") throw new Error(j.message);
+    t.set(85, "Menyusun tampilan…"); all = j.data; ready = true; route(); t.set(100); setTimeout(() => t.done("Konten siap"), 250);
+  } catch (e) { t.fail("Gagal memuat"); $("msg").textContent = "Gagal memuat data: " + e.message; $("msg").classList.remove("hidden"); }
+}
+
+/* ===== ROUTING: #brand | #brand/story | #ijff-2026 ===== */
+function route() {
+  const [b, c] = location.hash.slice(1).split("/");
+  isIjff = (b === "ijff-2026");
+  B = isIjff ? null : (BRANDS.find(x => x.slug === b) || null);
+  C = B ? (CATS.find(x => x.slug === c) || null) : null;
+
+  $("ijffBody").classList.toggle("hidden", !isIjff);
+  $("hero").classList.toggle("hidden", isIjff);
+  $("mainContent").classList.toggle("hidden", isIjff);
+  $("foot").classList.toggle("hidden", isIjff);
+
+  if (isIjff) {
+    if ($("ijffFrame").src !== IJFF_URL) $("ijffFrame").src = IJFF_URL;
+    document.title = "IJFF 2026 — Pusat Konten";
+    renderNav();
+    window.scrollTo({top: 0});
+    return;
+  }
+
+  $("homeBody").classList.toggle("hidden", !!B);
+  $("brandBody").classList.toggle("hidden", !B);
+  document.title = B ? `${B.name}${C ? " · " + C.name : ""} — Pusat Konten` : "Pusat Konten";
+  renderNav(); renderHero();
+  if (B) { $("q").value = ""; renderTabs(); renderGrid(); } else renderHome();
+  window.scrollTo({top: 0});
+}
+window.addEventListener("hashchange", route);
+const go = (b, c) => location.hash = b.slug + (c ? "/" + c.slug : "");
+
+function renderNav() {
+  $("navLinks").innerHTML = `<a href="#" class="nl whitespace-nowrap ${!B && !isIjff ? "on" : ""}">Home</a>`
+    + BRANDS.map(b => `<a href="#${b.slug}" class="nl whitespace-nowrap ${B && B.slug === b.slug ? "on" : ""}">${esc(b.name)}</a>`).join("")
+    + `<a href="#ijff-2026" class="nl whitespace-nowrap ${isIjff ? "on" : ""}">IJFF 2026</a>`;
+  $("navCta").innerHTML = (B || isIjff) ? L("link", "Salin link") : L("arrow", "Jelajahi Brand");
+  $("navCta").classList.toggle("js-copylink", !!(B || isIjff));
+}
+function navAction() { (B || isIjff) ? copyLink() : $("brands").scrollIntoView({behavior: "smooth"}); }
+
+function renderHero() {
+  if (!B) {
+    $("heroInner").innerHTML = `<div class="pt-12 pb-20">
+     <div class="rise max-w-2xl"><div class="eyebrow">Pusat Konten</div>
+      <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mt-4">Materi Promosi untuk <span class="gtext">Setiap Brand</span></h1>
+      <p class="mt-4 text-slate-200 max-w-md">Akses story, feed, carousel, materi blast, dan video resmi. Preview, zoom, lalu unduh dalam satu tempat.</p>
+      <div class="mt-7 flex flex-wrap gap-3"><button class="btn" onclick="$('brands').scrollIntoView({behavior:'smooth'})">${L("arrow", "Jelajahi Brand")}</button>
+       <button class="btn btn3" onclick="$('steps').scrollIntoView({behavior:'smooth'})">${L("play", "Cara Pakai")}</button></div></div>
+     </div>`;
+  } else {
+    const n = cnt(x => x.brand === B.name);
+    $("heroInner").innerHTML = `<div class="pt-8 pb-14 flex flex-wrap items-center justify-between gap-6">
+     <div class="flex items-center gap-5 rise">
+      <div class="bg-white rounded-2xl p-3 w-32 h-24 flex items-center justify-center shadow-xl overflow-hidden shrink-0">
+       <img src="${esc(CONFIG.LOGOS[B.name])}" alt="${esc(B.name)}" class="max-h-full max-w-full w-auto h-auto object-contain object-center" onerror="logoFail(this,'${B.icon}')">
+      </div>
+      <div><button onclick="location.hash=''" class="text-xs text-slate-300 hover:text-white flex items-center gap-1">${ico("back", "w-3.5 h-3.5")} Semua brand</button>
+       <h1 class="text-4xl font-extrabold mt-1"><span class="gtext">${esc(B.name)}</span></h1>
+       <p class="text-slate-300 text-sm mt-1">${n} materi · ${cnt(x => x.brand === B.name && isVideo(x))} video${C ? " · " + esc(C.name) : ""}</p></div></div>
+     <div class="flex gap-2 rise" style="--i:2"><button onclick="copyLink()" class="btn btn3 js-copylink">${L("link", "Salin link")}</button><button onclick="downloadAll()" id="btnAll" class="btn">${L("download", "Download semua")}</button></div></div>`;
+  }
+}
+
+function renderHome() {
+  $("brandGrid").innerHTML = BRANDS.map((b, k) => ready ? `
+   <button data-b="${b.slug}" class="group card lift p-6 text-left rise flex flex-col" style="--i:${k + 1}">
+    <div class="h-12 flex items-center"><img src="${esc(CONFIG.LOGOS[b.name])}" alt="${esc(b.name)}" class="h-10 w-auto max-w-full object-contain object-left"></div>
+    <p class="text-[11px] muted mt-3">Story · Feed · Carousel · Blast · Video</p>
+    <div class="flex items-center justify-between mt-4"><span class="muted text-xs"><b class="cnt" data-n="${cnt(x => x.brand === b.name)}">0</b> materi</span>
+    <span class="brass transition group-hover:translate-x-1.5">${ico("arrow", "w-5 h-5")}</span></div></button>`
+   : `<div class="card p-6"><div class="sk h-10 w-28 rounded"></div><div class="sk h-3 w-36 rounded mt-4"></div><div class="sk h-3 w-20 rounded mt-3"></div></div>`).join("");
+  document.querySelectorAll(".cnt").forEach(el => countUp(el, +el.dataset.n));
+}
+$("brandGrid").addEventListener("click", e => { const t = e.target.closest("[data-b]"); if (t) go(BRANDS.find(x => x.slug === t.dataset.b)); });
+
+function list() {
+  const q = $("q").value.trim().toLowerCase(), s = $("sort").value;
+  let l = all.filter(x => x.brand === B.name && (!C || x.kategori === C.name) && (!q || (x.judul + " " + (x.caption || "")).toLowerCase().includes(q)));
+  if (s === "old") l = l.slice().reverse(); else if (s === "az") l = l.slice().sort((a, b) => String(a.judul).localeCompare(String(b.judul)));
+  return l;
+}
+function renderTabs() {
+  const mine = all.filter(x => x.brand === B.name);
+  $("tabs").innerHTML = [{name:"Semua", slug:"", icon:"all"}, ...CATS].map(c => {
+    const n = c.slug ? mine.filter(x => x.kategori === c.name).length : mine.length, on = (C ? C.slug : "") === c.slug;
+    return `<button data-c="${c.slug}" class="chip ${on ? "on" : ""}">${ico(c.icon, "w-4 h-4")}${esc(c.name)} <span class="opacity-70">${n}</span></button>`;
+  }).join("");
+}
+function renderGrid() {
+  if (!B) return; const l = list();
+  $("resInfo").textContent = l.length + " materi ditampilkan";
+  $("grid").innerHTML = l.length ? l.map((i, k) => `
+   <div class="card overflow-hidden flex flex-col lift rise" style="--i:${Math.min(k, 8)}">
+    <div data-id="${esc(i.id)}" class="open group relative aspect-[4/3] ph cursor-pointer flex items-center justify-center overflow-hidden">
+     <div class="sk absolute inset-0"></div>
+     <img src="${esc(i.viewUrl)}" loading="lazy" alt="${esc(i.judul)}" class="fadein absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105" onload="this.classList.add('ld')" onerror="this.previousElementSibling.remove();this.remove()">
+     ${isVideo(i) ? `<span class="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style="color:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.55))">${ico("play", "w-14 h-14")}</span>` : ""}
+     <span class="absolute top-3 left-3 chip !py-1 text-[10px]">${ico((CATS.find(c => c.name === i.kategori) || {}).icon, "w-3.5 h-3.5")}${esc(i.kategori)}</span>
+    </div>
+    <div class="p-4 flex-1"><p class="text-[11px] muted">${esc(i.tanggal)}</p>
+     <h3 data-id="${esc(i.id)}" class="open font-extrabold text-sm mt-1 cursor-pointer line-clamp-2 hover:text-[#E6195F] transition">${esc(i.judul)}</h3>
+     <p class="text-xs muted mt-1.5 line-clamp-2">${esc(i.caption)}</p></div>
+    <div class="p-4 pt-0"><button data-dl="${esc(i.id)}" class="btn w-full">${L("download", isVideo(i) ? "Download video" : "Download")}</button></div>
+   </div>`).join("")
+   : `<div class="col-span-full card p-10 text-center pop"><p class="font-extrabold text-xl">Tidak ada materi</p><p class="muted text-xs mt-1">${esc(B.name)}${C ? " · " + esc(C.name) : ""}</p></div>`;
+}
+$("tabs").addEventListener("click", e => { const t = e.target.closest("[data-c]"); if (t) go(B, CATS.find(x => x.slug === t.dataset.c)); });
+$("grid").addEventListener("click", e => {
+  const d = e.target.closest("[data-dl]"); if (d) return download(all.find(x => String(x.id) === d.dataset.dl));
+  const t = e.target.closest(".open"); if (t) openModal(t.dataset.id);
+});
+async function copyLink() {
+  const bs = document.querySelectorAll(".js-copylink");
+  try { await navigator.clipboard.writeText(location.href); bs.forEach(b => b.innerHTML = L("check", "Tersalin")); } catch (e) { prompt("Salin link ini:", location.href); }
+  setTimeout(() => bs.forEach(b => b.innerHTML = L("link", "Salin link")), 1500);
+}
+
+/* ===== DOWNLOAD DENGAN PERSEN ===== */
+const saveBlob = (blob, name) => { const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); };
+const nativeDl = url => { const a = document.createElement("a"); a.href = url; a.target = "_blank"; document.body.appendChild(a); a.click(); a.remove(); };
+async function download(i, t) {
+  const own = !t; if (own) t = Prog.start("Mengunduh", i.fileName || i.judul);
+  try {
+    if (!i.fileId) throw 0;
+    t.set(2, "Menghubungi Drive…");
+    const r = await fetch(`https://drive.usercontent.google.com/download?id=${i.fileId}&export=download&confirm=t`);
+    if (!r.ok || !r.body) throw 0;
+    const total = +r.headers.get("content-length") || 0;
+    if (total > 200 * 1048576) { r.body.cancel(); throw 0; }
+    const rd = r.body.getReader(), parts = []; let got = 0;
+    for (;;) { const {done, value} = await rd.read(); if (done) break; parts.push(value); got += value.length;
+      total ? t.set(got / total * 100, `${mb(got)} / ${mb(total)}`) : t.indet(`${mb(got)} diterima`); }
+    saveBlob(new Blob(parts, {type: i.mimeType || "application/octet-stream"}), i.fileName || "download");
+    if (own) t.done("Unduhan selesai");
+  } catch (e) {
+    nativeDl(dlUrl(i)); t.indet("Diteruskan ke browser — lihat bar unduhan");
+    if (own) setTimeout(() => t.done("Dikirim ke browser"), 2500); else await new Promise(r => setTimeout(r, 1200));
+  }
+}
+async function downloadAll() {
+  const l = list(); if (!l.length) return alert("Tidak ada konten untuk didownload.");
+  if (l.length > 3 && !confirm(l.length + " file akan diunduh berurutan. Jika browser meminta izin unduhan ganda, pilih Izinkan. Lanjut?")) return;
+  const t = Prog.start("Download semua", `0 dari ${l.length} file`), btn = $("btnAll"); if (btn) btn.disabled = true;
+  for (let k = 0; k < l.length; k++) { t.set(k / l.length * 100, `File ${k + 1} dari ${l.length}: ${l[k].fileName || l[k].judul}`); await download(l[k], t); }
+  t.set(100); setTimeout(() => t.done(l.length + " file diproses"), 300); if (btn) btn.disabled = false;
+}
+
+/* ===== PREVIEW + ZOOM + PREV/NEXT ===== */
+let z = {s:1,x:0,y:0}, pts = new Map(), d0 = 0, s0 = 1, mList = [];
+const clamp = v => Math.min(6, Math.max(1, v));
+function applyZ() { const im = $("zImg"); if (im) im.style.transform = `translate(${z.x}px,${z.y}px) scale(${z.s})`; $("zLabel").textContent = Math.round(z.s * 100) + "%"; }
+function zoomBy(f) { z.s = clamp(z.s * f); if (z.s === 1) z.x = z.y = 0; applyZ(); }
+function resetZoom() { z = {s:1,x:0,y:0}; applyZ(); }
+const dist = () => { const p = [...pts.values()]; return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1; };
+const stage = $("stage");
+stage.addEventListener("wheel", e => { if (!$("zImg")) return; e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.15 : 1/1.15); }, {passive:false});
+stage.addEventListener("pointerdown", e => { if (!$("zImg")) return; pts.set(e.pointerId, {x:e.clientX,y:e.clientY}); stage.setPointerCapture(e.pointerId); if (pts.size === 2) { d0 = dist(); s0 = z.s; } });
+stage.addEventListener("pointermove", e => {
+  const p = pts.get(e.pointerId); if (!p) return;
+  if (pts.size === 1 && z.s > 1) { z.x += e.clientX - p.x; z.y += e.clientY - p.y; }
+  pts.set(e.pointerId, {x:e.clientX,y:e.clientY});
+  if (pts.size === 2) { z.s = clamp(s0 * dist() / d0); if (z.s === 1) z.x = z.y = 0; }
+  applyZ();
+});
+["pointerup","pointercancel"].forEach(t => stage.addEventListener(t, e => pts.delete(e.pointerId)));
+stage.addEventListener("dblclick", () => { if ($("zImg")) z.s > 1 ? resetZoom() : zoomBy(2.5); });
+function openModal(id) { mList = list(); const k = mList.findIndex(x => String(x.id) === String(id)); if (k < 0) return; show(k); $("modal").classList.remove("hidden"); }
+function show(idx) {
+  cur = mList[idx]; if (!cur) return; cur._i = idx;
+  $("mCat").textContent = cur.kategori; $("mTitle").textContent = cur.judul; $("mCap").textContent = cur.caption || "Tidak ada catatan caption.";
+  $("btnPrev").classList.toggle("hidden", idx === 0); $("btnNext").classList.toggle("hidden", idx === mList.length - 1);
+  pts.clear(); z = {s:1,x:0,y:0}; const zm = isImg(cur);
+  $("zoomBar").classList.toggle("hidden", !zm); $("zHint").classList.toggle("hidden", !zm);
+  if (zm) stage.innerHTML = `<div class="sk absolute inset-0"></div><img id="zImg" class="fadein" src="${esc(cur.viewUrl)}" alt="${esc(cur.judul)}" draggable="false" onload="this.classList.add('ld');this.previousElementSibling&&this.previousElementSibling.remove()">`;
+  else if (cur.fileId) stage.innerHTML = `<iframe src="https://drive.google.com/file/d/${esc(cur.fileId)}/preview" class="w-full h-full rounded-2xl" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+  else stage.innerHTML = `<p class="text-sm muted">Preview tidak tersedia, silakan download.</p>`;
+  $("mDl").innerHTML = L("download", isVideo(cur) ? "Download video" : "Download"); applyZ();
+}
+const nav = d => show((cur ? cur._i : 0) + d);
+document.addEventListener("keydown", e => { if ($("modal").classList.contains("hidden")) return; if (e.key === "ArrowLeft") nav(-1); if (e.key === "ArrowRight") nav(1); });
+function closeModal() { stage.innerHTML = ""; $("modal").classList.add("hidden"); }
+const dlCurrent = () => download(cur);
+async function copyCaption() {
+  try { await navigator.clipboard.writeText(cur.caption || ""); $("btnCopy").innerHTML = L("check", "Tersalin"); } catch (e) {}
+  setTimeout(() => $("btnCopy").innerHTML = L("copy", "Salin caption"), 1500);
+}
+load();
+</script></body></html>
